@@ -37,6 +37,6 @@ class AuthCop::Railtie < Rails::Railtie
   end
 
   console do
-    AuthCop.unsafe!
+    AuthCop.unsafe! unless ENV["AUTHCOP"]
   end
 end
