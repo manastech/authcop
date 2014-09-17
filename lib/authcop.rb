@@ -62,15 +62,16 @@ module AuthCop
   def inherited(child_class)
     super
     child_class.default_scope do
-      if scope_model = AuthCop.current_scope
+      if AuthCop.unsafe?
+        child_class.scoped
+      elsif scope_model = AuthCop.current_scope
         scope_model_name = scope_model.class.name.gsub(/^.*::/, '').underscore.to_sym
         procs = child_class.instance_variable_get(:@auth_scope_procs)
         auth_scope_proc = procs && procs[scope_model_name]
         raise "#{child_class.name} must define auth_scope_for(:#{scope_model_name})" unless auth_scope_proc
         auth_scope_proc.call scope_model
       else
-        raise "No auth scope defined" unless AuthCop.unsafe?
-        child_class.scoped
+        raise "No auth scope defined"
       end
     end
   end
