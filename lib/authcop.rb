@@ -17,10 +17,11 @@ module AuthCop
   end
 
   def self.with_auth_scope(object)
-    if object
-      object.as_auth_scope { yield }
-    else
+    begin
+      AuthCop.push_scope object
       yield
+    ensure
+      AuthCop.pop_scope
     end
   end
 
@@ -38,13 +39,8 @@ module AuthCop
   end
 
   def defines_auth_scope
-    define_method :as_auth_scope do |&block|
-      begin
-        AuthCop.push_scope self
-        block.call
-      ensure
-        AuthCop.pop_scope
-      end
+    define_method :as_auth_scope do
+      AuthCop.with_auth_scope(self) { yield }
     end
 
     class_eval %Q(
