@@ -5,16 +5,12 @@ module AuthCop::SpecHelpers
     end
   end
 
-  def auth_scope(name)
-    let!(name) { AuthCop.unsafe { yield } }
-
-    around(:each) do |example|
-      model = send(name)
-      begin
-        model.as_auth_scope { example.run }
-      ensure
-        AuthCop.unsafe { model.destroy rescue nil }
-      end
+  def auth_scope(name, &block)
+    let!(name) do
+      model = AuthCop.unsafe { self.instance_eval(&block) }
+      AuthCop.push_scope model
+      model
     end
+    after(:each) { AuthCop.pop_scope }
   end
 end
